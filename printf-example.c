@@ -25,6 +25,9 @@ int       systick_i;
 static void gpio_setup(void)
 {
 
+  /* STEP 1 - Enable IO clock for IOPB */
+  /* Ref: RM0008 p */
+  
 	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_IOPBEN);
 	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_IOPCEN);
 
@@ -40,7 +43,28 @@ static void gpio_setup(void)
 
 static void clock_setup(void)
 {
-	rcc_clock_setup_in_hse_8mhz_out_24mhz();
+
+  /* Set clock to 24MHz */
+  /* Reg names: /usr/local/arm-none-eabi/include/libopencm3/stm32/f1/rcc.h */
+  /* On reset, clock source = HSI */
+  
+  // turn on HSE
+  // ref RM0008 p90
+  RCC_CR |= 0x00010000;  // enable HSE
+  while ((RCC_CR & 0x00020000) == 0);     // wait for HSERDY
+  
+  // set up clock source
+  // ref RM0008 p92
+  // PLLMUL=3,PLLXTPRE=0,PLLSRC=1,ADCPRE=0,PPRE2=0,PPRE1=0,HPRE=0,SWS=0,SW=0 
+  RCC_CFGR = 0x00050000;
+  
+  // enable PLL, wait for settling
+  RCC_CR |= 0x01000000;
+  while ((RCC_CR & 0x02000000) == 0);        // wait for PLLRDY
+  // set PLL as clock in
+  RCC_CFGR |= 0x00000001;
+  
+//	rcc_clock_setup_in_hse_8mhz_out_24mhz();
 
 	/* Enable GPIOC clock. */
 	rcc_periph_clock_enable(RCC_GPIOC);

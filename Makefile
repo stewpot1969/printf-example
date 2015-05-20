@@ -48,7 +48,7 @@ GC=-Wl,--gc-sections
 
 # Create map file
 MAP=-Wl,-Map=$(NAME).map
-NAME=interrupt
+NAME=printf-example
 STARTUP_DEFS=-D__STARTUP_CLEAR_BSS -D__START=main
 
 LDSCRIPTS=-L. -T nokeep.ld
