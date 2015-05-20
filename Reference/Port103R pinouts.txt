@@ -1,0 +1,18 @@
+
+LEDS
+
+LED1          = PB12
+LED2          = PB13
+LED3          = PB14
+LED4          = PB15
+
+Buttons
+
+KEY1          = PC6 
+KEY2          = PC7
+KEY3          = PC8
+
+Joystick
+
+Joystick      = PB5..8
+Joy button    = PB9
