@@ -1,0 +1,13 @@
+
+rcc_periph_clock_enable(RCC_GPIOC);
+  _RCC_REG(clken) |= _RCC_BIT(clken)
+
+rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_IOPBEN);
+  RCC_APB2ENR |= RCC_APB2ENR_IOPBEN;
+
+gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL, GPIO12|GPIO13|GPIO14|GPIO15);
+  GPIOB_CRL=...
+  GPIOB_CRH=...
+
+gpio_set(GPIOB,GPIO6);
+  GPIOB_BSRR=1<<6;

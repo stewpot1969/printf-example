@@ -1,0 +1,19 @@
+
+  // set systick clock source
+  systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
+    STK_CTRL &= 0xFFFFFFFB;
+
+
+  // set autoreload counter
+  systick_set_reload(1499);
+    STK_LOAD=1499;
+
+
+  // enable systick interrupt
+  systick_interrupt_enable();
+    STK_CTRL |= 0x00000002;
+
+
+  // GO
+  systick_counter_enable();
+    STK_CTRL |= 0x00000001;
