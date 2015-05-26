@@ -28,9 +28,6 @@ static void gpio_setup(void)
   /* STEP 1 - Enable IO clock for IOPB */
   /* Ref: RM0008 p */
   
-	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_IOPBEN);
-	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_IOPCEN);
-
 	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_2_MHZ,
 		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO12|GPIO13|GPIO14|GPIO15);
 
@@ -50,25 +47,26 @@ static void clock_setup(void)
   
   // turn on HSE
   // ref RM0008 p90
-  RCC_CR |= 0x00010000;  // enable HSE
-  while ((RCC_CR & 0x00020000) == 0);     // wait for HSERDY
+  RCC_CR |= RCC_CR_HSEON;  // enable HSE
+  while ((RCC_CR & RCC_CR_HSERDY) == 0);     // wait for HSERDY
   
   // set up clock source
   // ref RM0008 p92
   // PLLMUL=3,PLLXTPRE=0,PLLSRC=1,ADCPRE=0,PPRE2=0,PPRE1=0,HPRE=0,SWS=0,SW=0 
-  RCC_CFGR = 0x00050000;
+  RCC_CFGR = 0x00090000;
   
   // enable PLL, wait for settling
-  RCC_CR |= 0x01000000;
-  while ((RCC_CR & 0x02000000) == 0);        // wait for PLLRDY
+  RCC_CR |= RCC_CR_PLLON;
+  while ((RCC_CR & RCC_CR_PLLRDY) == 0);        // wait for PLLRDY
   // set PLL as clock in
-  RCC_CFGR |= 0x00000001;
+  RCC_CFGR |= 0x00000002;
   
 //	rcc_clock_setup_in_hse_8mhz_out_24mhz();
-
-	/* Enable GPIOC clock. */
-	rcc_periph_clock_enable(RCC_GPIOC);
-	rcc_periph_clock_enable(RCC_GPIOB);
+  
+	//rcc_periph_clock_enable(RCC_GPIOC);
+	RCC_APB2ENR |= 1 << 4;
+	//rcc_periph_clock_enable(RCC_GPIOB);
+	RCC_APB2ENR |= 1 << 3;
 
 }
 
