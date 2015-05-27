@@ -5,6 +5,7 @@ void SystemInit()
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/systick.h>
@@ -70,10 +71,10 @@ static void clock_setup(void)
             + 0 << 22 \   // USBPRE = 0
             + 2 << 18 \   // PLLMUL = 2 (16MHz)
             + 1 << 16 \   // PLLSRC = 1 (HSE = PLL in)
-            + 0 << 14 \   // ADCPRE = 0
-            + 0 << 11 \   // PPRE2 = 0 (APB2 = HCLK)
-            + 0 << 8  \   // PPRE1 = 0 (APB1 = HCLK)
-            + 0 << 4  \   // HPRE = 0 (AHB = SYSCLK)
+            + 0 << 14 \   // ADCPRE = 0               Max: 14MHz
+            + 0 << 11 \   // PPRE2 = 0 (APB2 = HCLK) Max: 72MHz
+            + 0 << 8  \   // PPRE1 = 0 (APB1 = HCLK) Max: 36MHz
+            + 0 << 4  \   // HPRE = 0 (AHB = SYSCLK) Max: 72MHz
             + 0;          // SYSCLK = HSI
   */
    RCC_CFGR =   (0 << 24) \
@@ -87,12 +88,16 @@ static void clock_setup(void)
               + 0;
     //RCC_CFGR = 0x000D0000;
 
-  // STEP 3: Enable PLL, wait for settling
+  // STEP 3: Set Flash wait states (SYSCLK <=24MHz:0 , 24-48MHz:1, 48-72MHz:2)
+  // Ref. RM0008 p54
+  FLASH_ACR=(FLASH_ACR & 0xFFFFFFF8)|0;
+  
+  // STEP 4: Enable PLL, wait for settling
   
   RCC_CR |= RCC_CR_PLLON;
   while ((RCC_CR & RCC_CR_PLLRDY) == 0);        // wait for PLLRDY
 
-  // STEP 4: Set SYSCLK = PLL
+  // STEP 5: Set SYSCLK = PLL
   RCC_CFGR |= 0x00000002;
     
 }
