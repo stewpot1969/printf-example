@@ -45,20 +45,41 @@ static void clock_setup(void)
   /* Reg names: /usr/local/arm-none-eabi/include/libopencm3/stm32/f1/rcc.h */
   /* On reset, clock source = HSI */
   
-  // turn on HSE
+  // STEP 1: Turn on HSE
   // ref RM0008 p90
+  
   RCC_CR |= RCC_CR_HSEON;  // enable HSE
   while ((RCC_CR & RCC_CR_HSERDY) == 0);     // wait for HSERDY
   
-  // set up clock source
+  // STEP 2: Set up clock source
   // ref RM0008 p92
-  // PLLMUL=3,PLLXTPRE=0,PLLSRC=1,ADCPRE=0,PPRE2=0,PPRE1=0,HPRE=0,SWS=0,SW=0 
-  RCC_CFGR = 0x00090000;
+  /*
+  RCC_CFGR =  0 << 24 \   // MCO = none
+            + 0 << 22 \   // USBPRE = 0
+            + 2 << 18 \   // PLLMUL = 2 (16MHz)
+            + 1 << 16 \   // PLLSRC = 1 (HSE = PLL in)
+            + 0 << 14 \   // ADCPRE = 0
+            + 0 << 11 \   // PPRE2 = 0 (APB2 = HCLK)
+            + 0 << 8  \   // PPRE1 = 0 (APB1 = HCLK)
+            + 0 << 4  \   // HPRE = 0 (AHB = SYSCLK)
+            + 0;          // SYSCLK = HSI
+  */
+  RCC_CFGR =  0 << 24 \
+            + 0 << 22 \
+            + 2 << 18 \
+            + 1 << 16 \
+            + 0 << 14 \
+            + 0 << 11 \
+            + 0 << 8  \
+            + 0 << 4  \
+            + 0;
+
+  // STEP 3: Enable PLL, wait for settling
   
-  // enable PLL, wait for settling
   RCC_CR |= RCC_CR_PLLON;
   while ((RCC_CR & RCC_CR_PLLRDY) == 0);        // wait for PLLRDY
-  // set PLL as clock in
+
+  // STEP 4: Set SYSCLK = PLL
   RCC_CFGR |= 0x00000002;
   
 //	rcc_clock_setup_in_hse_8mhz_out_24mhz();
