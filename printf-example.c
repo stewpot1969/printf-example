@@ -24,17 +24,29 @@ int       systick_i;
 
 static void gpio_setup(void)
 {
-
-  /* STEP 1 - Enable IO clock for IOPB */
-  /* Ref: RM0008 p */
   
-	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO12|GPIO13|GPIO14|GPIO15);
+  // STEP 1 - Enable IO clock for IOPB, IOPB
+  // Ref: RM0008 p103
+	RCC_APB2ENR |= (1 << 4) + (1 << 3);
 
-	gpio_set_mode(GPIOC, GPIO_MODE_INPUT,
-		      GPIO_CNF_INPUT_PULL_UPDOWN, GPIO6|GPIO7|GPIO8);
-		      
-  gpio_set(GPIOC,GPIO6|GPIO7|GPIO8);
+  // STEP 2 - Configure GPIOB12-15 as 2 MHz output
+  // Ref: RM0008 p156
+  GPIOB_CRH=(GPIOB_CRH & 0x0000FFFF) + 0x22220000;
+
+  // STEP 3 - Configure GPIOC6-8 as inputs
+  
+  GPIOC_CRL=(GPIOC_CRL & 0x00FFFFFF) + 0x88000000;
+  GPIOC_CRH=(GPIOC_CRH & 0xFFFFFFF0) + 0x00000008;  
+  
+//	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_2_MHZ,
+//		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO12|GPIO13|GPIO14|GPIO15);
+
+//	gpio_set_mode(GPIOC, GPIO_MODE_INPUT,
+//		      GPIO_CNF_INPUT_PULL_UPDOWN, GPIO6|GPIO7|GPIO8);
+	
+	// STEP 4 - Set GPIOC6-8
+	GPIOC_BSRR = (1 << 6)+ (1 << 7) + (1 << 8);	      
+//  gpio_set(GPIOC,GPIO6|GPIO7|GPIO8);
   
 }
 
@@ -64,15 +76,16 @@ static void clock_setup(void)
             + 0 << 4  \   // HPRE = 0 (AHB = SYSCLK)
             + 0;          // SYSCLK = HSI
   */
-  RCC_CFGR =  0 << 24 \
-            + 0 << 22 \
-            + 2 << 18 \
-            + 1 << 16 \
-            + 0 << 14 \
-            + 0 << 11 \
-            + 0 << 8  \
-            + 0 << 4  \
-            + 0;
+   RCC_CFGR =   (0 << 24) \
+              + (0 << 22) \
+              + (3 << 18) \
+              + (1 << 16) \
+              + (0 << 14) \
+              + (0 << 11) \
+              + (0 << 8) \
+              + (0 << 4) \
+              + 0;
+    //RCC_CFGR = 0x000D0000;
 
   // STEP 3: Enable PLL, wait for settling
   
@@ -81,26 +94,26 @@ static void clock_setup(void)
 
   // STEP 4: Set SYSCLK = PLL
   RCC_CFGR |= 0x00000002;
-  
-//	rcc_clock_setup_in_hse_8mhz_out_24mhz();
-  
-	//rcc_periph_clock_enable(RCC_GPIOC);
-	RCC_APB2ENR |= 1 << 4;
-	//rcc_periph_clock_enable(RCC_GPIOB);
-	RCC_APB2ENR |= 1 << 3;
-
+    
 }
 
 void timer_setup(void) {
 
-  // set systick clock source
-  systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
-  // set autoreload counter
-  systick_set_reload(1499);
-  // enable systick interrupt
-  systick_interrupt_enable();
-  // GO
-  systick_counter_enable();
+  // STEP 1: Set systick clock source
+  //systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
+  STK_CSR &= ~(1 << 2);    // clock source = AHB/8
+  
+  // STEP 2: Set autoreload counter
+  //systick_set_reload(1499);
+  STK_RVR=1499;
+  
+  // STEP 3: Enable systick interrupt
+  //systick_interrupt_enable();
+  STK_CSR |= (1 << 1);
+  
+  // STEP 4: GO
+  //systick_counter_enable();
+  STK_CSR |= (1 << 0);
   
 }
 
